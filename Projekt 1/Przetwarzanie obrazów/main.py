@@ -12,8 +12,8 @@ class SubpageX(tk.Frame):
         btn_greyscale.pack(side=tk.LEFT, padx=2, pady=2)
         btn_xb = tk.Button(top_bar, text="Jasność", command=self.show_xb)
         btn_xb.pack(side=tk.LEFT, padx=2, pady=2)
-        btn_contrast = tk.Button(top_bar, text="Kontrast", command=self.show_contrast)
-        btn_contrast.pack(side=tk.LEFT, padx=2, pady=2)
+        # btn_contrast = tk.Button(top_bar, text="Kontrast", command=self.show_contrast)
+        # btn_contrast.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Obszar, w którym zmienia się zawartość zależnie od przycisku
         self.content_area = tk.Frame(self)
