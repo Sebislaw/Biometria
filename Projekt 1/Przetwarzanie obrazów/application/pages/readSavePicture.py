@@ -1,44 +1,68 @@
 import tkinter as tk
+from PIL import Image
+import numpy as np
+from application.pages.baseSubpage import BaseSubpage
 
 # Strona
-class ReadSavePicture(tk.Frame):
+class ReadSavePicture(BaseSubpage):
 
-    def __init__(self, master):
-        super().__init__(master)
-
-        # Górny pasek strony
-        top_bar = tk.Frame(self)
-        top_bar.pack(side=tk.TOP, fill=tk.X)
-
-        # Obszar podstrony
-        self.content_area = tk.Frame(self)
-        self.content_area.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        # Zawartość podstrony
-        self.pages = {
-            "readsave": {
-                "label": "Wczytaj/zapisz obraz",
-                "frame": tk.Frame(self.content_area, bg="pink"),
-                "content": {"text": "Zapisz wczyt", "bg": "lightblue"}
-            }
+    def __init__(self, master, main_app):
+        # Definicja podstron
+        subpages = {
+            "read_save": {"label": "Wczytaj/usuń obraz"},
+            "save_changes": {"label": "Zapisz obraz"}
         }
+        # Podstrona domyślna
+        default_page = "read_save"
+        super().__init__(master, main_app, subpages, default_page)
 
-        # Przyciski podstron na górnym pasku strony
-        for key, page in self.pages.items():
-            btn = tk.Button(top_bar, text=page["label"], command=lambda k=key: self.show_page(k))
-            btn.pack(side=tk.LEFT, padx=2, pady=2)
+    ####################################################################################################################
 
-        # Domyślna podstrona
-        self.show_page("readsave")
+    def build_subpage(self, page_key):
+        if page_key == "read_save":
 
-    def show_page(self, page_key):
-        for key, data in self.pages.items():
-            frame = data["frame"]
-            if key == page_key:
-                frame.pack(fill=tk.BOTH, expand=True)
-                for widget in frame.winfo_children():
-                    widget.destroy()
-                tk.Label(frame, **data["content"]).pack(padx=10, pady=10)
-            else:
-                # Ukryj pozostałe elementy
-                frame.pack_forget()
+            btn_wczytaj = tk.Button(self.content_area, text="Wczytaj", command=self.load_image)
+            btn_wczytaj.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2)
+
+            btn_wyczysc = tk.Button(self.content_area, text="Wyczyść", command=self.clear_image)
+            btn_wyczysc.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2)
+
+        elif page_key == "save_changes":
+
+            btn_a = tk.Button(self.content_area, text="A", command=self.load_image)
+            btn_a.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2)
+
+            btn_b = tk.Button(self.content_area, text="B", command=self.clear_image)
+            btn_b.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2)
+
+        else:
+            tk.Label(self.content_area, text="Podstrona pusta").pack()
+
+    ####################################################################################################################
+
+    def load_image(self):
+
+        IMAGE_PATH = "pictures/20241228_191601.jpg"
+
+        try:
+            image = Image.open(IMAGE_PATH)
+            # Zapisywanie obrazu jako numpy array w głównej aplikacji
+            self.main_app.image_array = np.array(image)
+            # Zapamiętujemy obraz oryginalny (jako obiekt Pillow) do dalszych skalowań
+            self.main_app.original_image = image
+            # Aktualizujemy lewy panel, aby wyświetlić przeskalowany obraz
+            self.main_app.update_left_panel_image()
+
+        except Exception as e:
+            print("Błąd przy wczytywaniu obrazu:", e)
+
+    ####################################################################################################################
+
+    def clear_image(self):
+        # Czyścimy lewy panel oraz usuwamy zapisane obrazy
+        self.main_app.left_panel.config(image='')
+        self.main_app.left_panel.image = None
+        self.main_app.original_image = None
+        self.main_app.image_array = None
+
+    ####################################################################################################################

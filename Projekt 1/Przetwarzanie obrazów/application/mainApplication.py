@@ -1,67 +1,105 @@
 import tkinter as tk
+from PIL import Image, ImageTk
+import numpy as np
 from application.pages.pixelOperations import PixelOperations
 from application.pages.graphicalFiltering import GraphicalFiltering
 from application.pages.readSavePicture import ReadSavePicture
 
 # Aplikacja
 class MainApplication(tk.Tk):
+
     def __init__(self):
         super().__init__()
         self.title("Przetwarzanie obrazów")
         self.geometry("600x500")
 
-        # Górny pasek aplikacji z przyciskami stron --------------------------------------------------------------------
+        # Atrybuty do przechowywania obrazu
+        self.original_image = None
+        self.image_array = None
+
+        #---------------------------------------------------------------------------------------------------------------
+
+        # Górna część aplikacji
+        top_application_part = tk.Frame(self)
+        top_application_part.place(relwidth=1.0, relheight=0.6)
 
         # Górny pasek aplikacji
-        main_top_bar = tk.Frame(self, bd=2, relief=tk.RAISED)
-        main_top_bar.pack(side=tk.TOP, fill=tk.X)
+        main_top_bar = tk.Frame(top_application_part, bd=2, relief=tk.RAISED)
+        main_top_bar.place(relwidth=1)
 
-        # Przyciski stron na górnym pasku aplikacji
-        btn_page_ReadSavePicture = tk.Button(main_top_bar, text="Wczytaj / Zapisz", command=self.show_page_ReadSavePicture)
-        btn_page_ReadSavePicture.pack(side=tk.LEFT, padx=5, pady=5)
-        btn_page_PixelOperations = tk.Button(main_top_bar, text="Operacje na pikselach", command=self.show_page_PixelOperations)
-        btn_page_PixelOperations.pack(side=tk.LEFT, padx=5, pady=5)
-        btn_page_GraphicalFiltering = tk.Button(main_top_bar, text="Filtry Graficzne", command=self.show_page_GraphicalFiltering)
-        btn_page_GraphicalFiltering.pack(side=tk.LEFT, padx=5, pady=5)
+        # Centralny obszar na panele
+        central_area = tk.Frame(top_application_part, bd=2, relief=tk.FLAT)
+        central_area.place(relx=0, rely=0.0, y=40, height=-40, relwidth=1.0, relheight=1)
 
-        # Środkowy obszar z dwoma panelami na obrazy -------------------------------------------------------------------
+        # Lewy panel
+        self.left_panel = tk.Label(central_area, text="Oryginalny obraz", bd=1, relief=tk.GROOVE)
+        self.left_panel.place(relx=0, rely=0, relwidth=0.5, relheight=1.0)
 
-        # Środkowy obszar
-        central_area = tk.Frame(self, bd=2, relief=tk.SUNKEN)
-        central_area.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # Prawy panel
+        self.right_panel = tk.Label(central_area, text="Obraz po modyfikacji", bd=1, relief=tk.GROOVE)
+        self.right_panel.place(relx=0.5, rely=0, relwidth=0.5, relheight=1.0)
 
-        # Panel lewy
-        self.left_panel = tk.Label(central_area, text="Lewy Panel", bd=1, relief=tk.GROOVE)
-        self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-        # Panel prawy
-        self.right_panel = tk.Label(central_area, text="Prawy Panel", bd=1, relief=tk.GROOVE)
-        self.right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # ---------------------------------------------------------------------------------------------------------------
 
-        # Zawartośći stron ---------------------------------------------------------------------------------------------
-
-        # Obszar strony
+        # Dolna część na strony
         self.subpage_area = tk.Frame(self, bd=2, relief=tk.SUNKEN)
-        self.subpage_area.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.subpage_area.place(relx=0, rely=0.6, relwidth=1.0, relheight=0.4)
 
-        # Inicjalizacja stron
-        self.page_ReadSavePicture = ReadSavePicture(self.subpage_area)
-        self.page_PixelOperations = PixelOperations(self.subpage_area)
-        self.page_GraphicalFiltering = GraphicalFiltering(self.subpage_area)
+        # ---------------------------------------------------------------------------------------------------------------
 
-        # Domyślna strona
-        self.page_ReadSavePicture.pack(fill=tk.BOTH, expand=True)
+        # Inicjalizacja stron – przekazujemy referencję do głównej aplikacji (main_app=self)
+        self.pages = {
+            "Wczytaj / Zapisz": ReadSavePicture(self.subpage_area, main_app=self),
+            "Operacje na pikselach": PixelOperations(self.subpage_area, main_app=self),
+            "Filtry Graficzne": GraphicalFiltering(self.subpage_area, main_app=self)
+        }
 
-    def show_page_ReadSavePicture(self):
-        self.page_PixelOperations.pack_forget()
-        self.page_GraphicalFiltering.pack_forget()
-        self.page_ReadSavePicture.pack(fill=tk.BOTH, expand=True)
+        # Przyciski do zmiany stron
+        for page_name in self.pages:
+            btn = tk.Button(main_top_bar, text=page_name,
+                            command=lambda key=page_name: self.show_page(key))
+            btn.pack(side=tk.LEFT, padx=5, pady=5)
 
-    def show_page_PixelOperations(self):
-        self.page_ReadSavePicture.pack_forget()
-        self.page_GraphicalFiltering.pack_forget()
-        self.page_PixelOperations.pack(fill=tk.BOTH, expand=True)
+        # Wyświetlenie domyślnej strony
+        self.show_page("Wczytaj / Zapisz")
 
-    def show_page_GraphicalFiltering(self):
-        self.page_ReadSavePicture.pack_forget()
-        self.page_PixelOperations.pack_forget()
-        self.page_GraphicalFiltering.pack(fill=tk.BOTH, expand=True)
+        # Nasłuchiwanie zmiany rozmiaru lewego panelu
+        self.left_panel.bind("<Configure>", lambda e: self.schedule_image_update())
+
+    ####################################################################################################################
+
+    def show_page(self, page_key):
+        # Ukrycie wszystkich stron i wyświetlenie wybranej
+        for page in self.pages.values():
+            page.pack_forget()
+        self.pages[page_key].pack(fill=tk.BOTH, expand=True)
+
+    ####################################################################################################################
+
+    def update_left_panel_image(self):
+        """Przeskalowuje oryginalny obraz do aktualnych wymiarów lewego panelu i wyświetla go."""
+        if self.original_image:
+            panel_width = self.left_panel.winfo_width()
+            panel_height = self.left_panel.winfo_height()
+            if panel_width > 0 and panel_height > 0:
+                # Tworzymy kopię oryginalnego obrazu, aby nie modyfikować go na stałe
+                image = self.original_image.copy()
+                # Przeskalowanie z zachowaniem proporcji (Image.Resampling.LANCZOS zapewnia wysoką jakość)
+                image.thumbnail((panel_width, panel_height), Image.Resampling.LANCZOS)
+                photo = ImageTk.PhotoImage(image)
+                self.left_panel.config(image=photo)  # Usuwamy ewentualny tekst
+                self.left_panel.image = photo  # Przechowujemy referencję, aby obraz nie został usunięty
+
+    ####################################################################################################################
+
+    def schedule_image_update(self):
+        """Schedules an image update with a delay to avoid excessive updates during resizing."""
+        if self.original_image is None:
+            return
+        # Cancel any previously scheduled update
+        if hasattr(self, "resize_after_id"):
+            self.after_cancel(self.resize_after_id)
+        # Schedule a new update after 300ms
+        self.resize_after_id = self.after(500, self.update_left_panel_image)
+
+    ####################################################################################################################

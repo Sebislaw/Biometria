@@ -1,59 +1,32 @@
 import tkinter as tk
+from application.pages.baseSubpage import BaseSubpage
 
 # Strona
-class GraphicalFiltering(tk.Frame):
+class GraphicalFiltering(BaseSubpage):
 
-    def __init__(self, master):
-        super().__init__(master)
+    def __init__(self, master, main_app):
+        # Definicja podstron
+        subpages = {
+            "1": {
+                "label": "1"
+            }
+        }
+        # Podstrona domyślna
+        default_page = "1"
+        super().__init__(master, main_app, subpages, default_page)
 
-        # Górny pasek strony z przyciskami podstron --------------------------------------------------------------------
+    ####################################################################################################################
 
-        # Górny pasek strony
-        top_bar = tk.Frame(self)
-        top_bar.pack(side=tk.TOP, fill=tk.X)
+    def build_subpage(self, page_key):
+        if page_key == "1":
 
-        # Przycisk podstron na górnym pasku strony
-        btn_ya = tk.Button(top_bar, text="Ya", command=self.show_ya)
-        btn_ya.pack(side=tk.LEFT, padx=2, pady=2)
-        btn_yb = tk.Button(top_bar, text="Yb", command=self.show_yb)
-        btn_yb.pack(side=tk.LEFT, padx=2, pady=2)
-        btn_yc = tk.Button(top_bar, text="Yc", command=self.show_yc)
-        btn_yc.pack(side=tk.LEFT, padx=2, pady=2)
+            btn_wczytaj = tk.Button(self.content_area, text="1a")
+            btn_wczytaj.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2)
 
-        # Zawartośći podstron ------------------------------------------------------------------------------------------
+            btn_wyczysc = tk.Button(self.content_area, text="1b")
+            btn_wyczysc.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2)
 
-        # Obszar podstrony
-        self.content_area = tk.Frame(self)
-        self.content_area.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        else:
+            tk.Label(self.content_area, text="Podstrona pusta").pack()
 
-        # Zawartość podstrony
-        self.frame_ya = tk.Frame(self.content_area, bg="lightyellow")
-        self.frame_yb = tk.Frame(self.content_area, bg="lightcoral")
-        self.frame_yc = tk.Frame(self.content_area, bg="lightgrey")
-
-        # Domyślna podstrona
-        self.show_ya()
-
-    def show_ya(self):
-        self.frame_yb.pack_forget()
-        self.frame_yc.pack_forget()
-        self.frame_ya.pack(fill=tk.BOTH, expand=True)
-        for widget in self.frame_ya.winfo_children():
-            widget.destroy()
-        tk.Label(self.frame_ya, text="Zawartość Ya", bg="lightyellow").pack(padx=10, pady=10)
-
-    def show_yb(self):
-        self.frame_ya.pack_forget()
-        self.frame_yc.pack_forget()
-        self.frame_yb.pack(fill=tk.BOTH, expand=True)
-        for widget in self.frame_yb.winfo_children():
-            widget.destroy()
-        tk.Label(self.frame_yb, text="Zawartość Yb", bg="lightcoral").pack(padx=10, pady=10)
-
-    def show_yc(self):
-        self.frame_ya.pack_forget()
-        self.frame_yb.pack_forget()
-        self.frame_yc.pack(fill=tk.BOTH, expand=True)
-        for widget in self.frame_yc.winfo_children():
-            widget.destroy()
-        tk.Label(self.frame_yc, text="Zawartość Yc", bg="lightgrey").pack(padx=10, pady=10)
+    ####################################################################################################################
