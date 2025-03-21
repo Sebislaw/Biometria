@@ -1,4 +1,5 @@
 import tkinter as tk
+
 from PIL import Image, ImageTk
 import numpy as np
 from application.pages.pixelOperations import PixelOperations
@@ -15,7 +16,13 @@ class MainApplication(tk.Tk):
 
         # Atrybuty do przechowywania obrazu
         self.original_image = None
-        self.image_array = None
+        self.original_image_array = None
+        self.modified_image = None
+        self.modified_image_array = None
+
+        # Values to remember ---------------
+        self.grey_slider_value = 0
+        # ----------------------------------
 
         #---------------------------------------------------------------------------------------------------------------
 
@@ -59,6 +66,8 @@ class MainApplication(tk.Tk):
             btn = tk.Button(main_top_bar, text=page_name,
                             command=lambda key=page_name: self.show_page(key))
             btn.pack(side=tk.LEFT, padx=5, pady=5)
+        btn = tk.Button(main_top_bar, text="Zapisz zmiany", command=self.save_changes)
+        btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
         # Wyświetlenie domyślnej strony
         self.show_page("Wczytaj / Zapisz")
@@ -77,29 +86,60 @@ class MainApplication(tk.Tk):
     ####################################################################################################################
 
     def update_left_panel_image(self):
-        """Przeskalowuje oryginalny obraz do aktualnych wymiarów lewego panelu i wyświetla go."""
+        """Update the left panel with the original image (or saved changes)."""
         if self.original_image:
             panel_width = self.left_panel.winfo_width()
             panel_height = self.left_panel.winfo_height()
             if panel_width > 0 and panel_height > 0:
-                # Tworzymy kopię oryginalnego obrazu, aby nie modyfikować go na stałe
+                # Make a copy to avoid altering the original
                 image = self.original_image.copy()
+                image.thumbnail((panel_width, panel_height), Image.Resampling.LANCZOS)
+                photo = ImageTk.PhotoImage(image)
+                self.left_panel.config(image=photo)
+                self.left_panel.image = photo  # Keep reference
+
+    def update_right_panel_image(self):
+        """Przeskalowuje oryginalny obraz do aktualnych wymiarów lewego panelu i wyświetla go."""
+        if self.modified_image:
+            panel_width = self.right_panel.winfo_width()
+            panel_height = self.right_panel.winfo_height()
+            if panel_width > 0 and panel_height > 0:
+                # Tworzymy kopię oryginalnego obrazu, aby nie modyfikować go na stałe
+                image = self.modified_image.copy()
                 # Przeskalowanie z zachowaniem proporcji (Image.Resampling.LANCZOS zapewnia wysoką jakość)
                 image.thumbnail((panel_width, panel_height), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(image)
-                self.left_panel.config(image=photo)  # Usuwamy ewentualny tekst
-                self.left_panel.image = photo  # Przechowujemy referencję, aby obraz nie został usunięty
+                self.right_panel.config(image=photo)  # Usuwamy ewentualny tekst
+                self.right_panel.image = photo  # Przechowujemy referencję, aby obraz nie został usunięty
+
+    def save_changes(self):
+        """
+        When the user presses "Zapisz zmiany", update the left image so that it matches the right (modified) one.
+        """
+        if self.modified_image is not None:
+            # Save the modified image as the new original image.
+            self.original_image = self.modified_image.copy()
+            self.original_image_array = self.modified_image_array.copy() if self.modified_image_array is not None else None
+            self.update_left_panel_image()
+            self.clear_values()
+
+    def clear_values(self):
+        self.grey_slider_value = 0
 
     ####################################################################################################################
 
     def schedule_image_update(self):
-        """Schedules an image update with a delay to avoid excessive updates during resizing."""
+        """Schedules a single update for both panels after 500ms of inactivity."""
         if self.original_image is None:
             return
         # Cancel any previously scheduled update
         if hasattr(self, "resize_after_id"):
             self.after_cancel(self.resize_after_id)
-        # Schedule a new update after 300ms
-        self.resize_after_id = self.after(500, self.update_left_panel_image)
+        # Schedule a new update after 500ms
+        self.resize_after_id = self.after(250, self.update_panels)
 
+    def update_panels(self):
+        """Update both left and right panels at once."""
+        self.update_left_panel_image()
+        self.update_right_panel_image()
     ####################################################################################################################

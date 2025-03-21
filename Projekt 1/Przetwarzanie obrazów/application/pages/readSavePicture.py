@@ -20,21 +20,13 @@ class ReadSavePicture(BaseSubpage):
 
     def build_subpage(self, page_key):
         if page_key == "read_save":
-
-            btn_wczytaj = tk.Button(self.content_area, text="Wczytaj", command=self.load_image)
-            btn_wczytaj.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2)
-
-            btn_wyczysc = tk.Button(self.content_area, text="Wyczyść", command=self.clear_image)
-            btn_wyczysc.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2)
-
+            btn_read = tk.Button(self.content_area, text="Wczytaj", command=self.load_image)
+            btn_read.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2, anchor="center")
+            btn_write = tk.Button(self.content_area, text="Wyczyść", command=self.clear_image)
+            btn_write.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2, anchor="center")
         elif page_key == "save_changes":
-
-            btn_a = tk.Button(self.content_area, text="A", command=self.load_image)
-            btn_a.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2)
-
-            btn_b = tk.Button(self.content_area, text="B", command=self.clear_image)
-            btn_b.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2)
-
+            btn_write = tk.Button(self.content_area, text="Zapisz zmiany", command=self.write_image)
+            btn_write.place(relx=0.5, rely=0.5, relwidth=0.2, relheight=0.3, anchor="center")
         else:
             tk.Label(self.content_area, text="Podstrona pusta").pack()
 
@@ -46,12 +38,19 @@ class ReadSavePicture(BaseSubpage):
 
         try:
             image = Image.open(IMAGE_PATH)
-            # Zapisywanie obrazu jako numpy array w głównej aplikacji
-            self.main_app.image_array = np.array(image)
-            # Zapamiętujemy obraz oryginalny (jako obiekt Pillow) do dalszych skalowań
+            # Store the image and its NumPy array in the main application as original
             self.main_app.original_image = image
-            # Aktualizujemy lewy panel, aby wyświetlić przeskalowany obraz
+            self.main_app.original_image_array = np.array(image)
+
+            # Initially, set the modified image as a copy of the original
+            self.main_app.modified_image = image.copy()
+            self.main_app.modified_image_array = np.array(image)
+
+            # Update both panels
             self.main_app.update_left_panel_image()
+            self.main_app.update_right_panel_image()
+
+            self.main_app.clear_values()
 
         except Exception as e:
             print("Błąd przy wczytywaniu obrazu:", e)
@@ -59,10 +58,21 @@ class ReadSavePicture(BaseSubpage):
     ####################################################################################################################
 
     def clear_image(self):
-        # Czyścimy lewy panel oraz usuwamy zapisane obrazy
+
         self.main_app.left_panel.config(image='')
         self.main_app.left_panel.image = None
         self.main_app.original_image = None
-        self.main_app.image_array = None
+        self.main_app.original_image_array = None
+
+        self.main_app.right_panel.config(image='')
+        self.main_app.right_panel.image = None
+        self.main_app.modified_image = None
+        self.main_app.modified_image_array = None
+
+        self.main_app.clear_values()
 
     ####################################################################################################################
+
+    def write_image(self):
+        if self.main_app.original_image is not None:
+            self.main_app.original_image.save("pictures/test.jpg")
