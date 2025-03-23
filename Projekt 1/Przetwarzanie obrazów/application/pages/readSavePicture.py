@@ -20,11 +20,13 @@ class ReadSavePicture(BaseSubpage):
 
     def build_subpage(self, page_key):
         if page_key == "read_save":
+            self.show_default_image()
             btn_read = tk.Button(self.content_area, text="Wczytaj", command=self.load_image)
-            btn_read.place(relx=0.3, rely=0.4, relwidth=0.1, relheight=0.2, anchor="center")
+            btn_read.place(relx=0.3, rely=0.5, relwidth=0.2, relheight=0.3, anchor="center")
             btn_write = tk.Button(self.content_area, text="Wyczyść", command=self.clear_image)
-            btn_write.place(relx=0.6, rely=0.4, relwidth=0.1, relheight=0.2, anchor="center")
+            btn_write.place(relx=0.7, rely=0.5, relwidth=0.2, relheight=0.3, anchor="center")
         elif page_key == "save_changes":
+            self.show_default_image()
             btn_write = tk.Button(self.content_area, text="Zapisz zmiany", command=self.write_image)
             btn_write.place(relx=0.5, rely=0.5, relwidth=0.2, relheight=0.3, anchor="center")
         else:
