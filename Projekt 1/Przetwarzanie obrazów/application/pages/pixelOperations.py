@@ -22,7 +22,24 @@ class PixelOperations(BaseSubpage):
             },
             "binarization": {
                 "label": "Binaryzacja"
+            },
+            "colour_channels": {
+                "label": "Kanały kolorów"
+            },
+            "mixing": {
+                "label": "Mieszanie obrazów"
+            },
+            "exponential": {
+                "label": "Eksponenta"
+            },
+            "logarithm": {
+                "label": "Logarytm"
+            },
+            "uniform": {
+                "label": "Wyrównanie histogramu"
             }
+
+
         }
         # Default subpage
         default_subpage = "greyscale"
@@ -90,6 +107,45 @@ class PixelOperations(BaseSubpage):
             slider.place(relx=0.5, rely=0.4, relwidth=0.8, relheight=0.5, anchor="center")
             self.binarize_with_slider()
 
+        elif page_key == "colour_channels":
+            # Red channel slider
+            slider_red = tk.Scale(
+                self.content_area,
+                from_=-255,
+                to=255,
+                orient="horizontal",
+                variable=self.main_app.red_slider_value,
+                label="Czerwony",
+                command=lambda e: self.on_slider_change(self.adjust_color_channels_with_slider)
+            )
+            slider_red.place(relx=0.5, rely=0.3, relwidth=0.8, relheight=0.5, anchor="center")
+
+            # Green channel slider
+            slider_green = tk.Scale(
+                self.content_area,
+                from_=-255,
+                to=255,
+                orient="horizontal",
+                variable=self.main_app.green_slider_value,
+                label="Zielony",
+                command=lambda e: self.on_slider_change(self.adjust_color_channels_with_slider)
+            )
+            slider_green.place(relx=0.5, rely=0.65, relwidth=0.8, relheight=0.5, anchor="center")
+
+            # Blue channel slider
+            slider_blue = tk.Scale(
+                self.content_area,
+                from_=-255,
+                to=255,
+                orient="horizontal",
+                variable=self.main_app.blue_slider_value,
+                label="Niebieski",
+                command=lambda e: self.on_slider_change(self.adjust_color_channels_with_slider)
+            )
+            slider_blue.place(relx=0.5, rely=1, relwidth=0.8, relheight=0.5, anchor="center")
+
+            self.adjust_color_channels_with_slider()
+
         else:
             tk.Label(self.content_area, text="Podstrona pusta").pack()
 
@@ -101,24 +157,19 @@ class PixelOperations(BaseSubpage):
     ####################################################################################################################
 
     def convert_greyscale_with_slider(self):
-        """
-        Blends the original image with its greyscale version based on the slider value.
-        """
-        # Check that the original image array is loaded
         if self.main_app.original_image_array is None:
             print("No image loaded!")
             return
         alpha = self.main_app.grey_slider_value.get() / 100.0
-        orig_arr = self.main_app.original_image_array.astype(np.float32)
+        orig_arr = self.main_app.original_image_array.astype(np.int16)
         grey = orig_arr.mean(axis=2).astype(np.uint8)
-        grey_rgb = np.stack((grey,) * 3, axis=-1).astype(np.float32)
+        grey_rgb = np.stack((grey,) * 3, axis=-1).astype(np.int16)
         blended = np.clip((1 - alpha) * orig_arr + alpha * grey_rgb, 0, 255).astype(np.uint8)
         self.update_right_panel(blended)
 
     ####################################################################################################################
 
     def adjust_brightness_with_slider(self):
-        """Adjusts the brightness of the image based on the slider value and updates the right panel."""
         if self.main_app.original_image_array is None:
             print("No image loaded!")
             return
@@ -156,7 +207,6 @@ class PixelOperations(BaseSubpage):
     ####################################################################################################################
 
     def binarize_with_slider(self):
-        # Binarization slider: value from 0 to 255 used as threshold
         if self.main_app.original_image_array is None:
             print("No image loaded!")
             return
@@ -167,3 +217,27 @@ class PixelOperations(BaseSubpage):
         binary = np.where(grey < threshold, 0, 255).astype(np.uint8)
         binary_rgb = np.stack((binary,) * 3, axis=-1)
         self.update_right_panel(binary_rgb)
+
+    ####################################################################################################################
+
+    def adjust_color_channels_with_slider(self):
+        if self.main_app.original_image_array is None:
+            print("No image loaded!")
+            return
+
+        # Get slider values for each color channel
+        red_val = self.main_app.red_slider_value.get()
+        green_val = self.main_app.green_slider_value.get()
+        blue_val = self.main_app.blue_slider_value.get()
+
+        # Create a copy of the original image
+        modified_arr = self.main_app.original_image_array.astype(np.int16).copy()
+
+        # Adjust each color channel separately
+        modified_arr[:, :, 0] = np.clip(modified_arr[:, :, 0] + red_val, 0, 255).astype(np.int16)  # Red channel (adjusted)
+        modified_arr[:, :, 1] = np.clip(modified_arr[:, :, 1] + green_val, 0, 255).astype(np.int16)  # Green channel (adjusted)
+        modified_arr[:, :, 2] = np.clip(modified_arr[:, :, 2] + blue_val, 0, 255).astype(np.int16)  # Blue channel (adjusted)
+
+        # Update the right panel with the modified image
+        modified_arr = modified_arr.astype(np.uint8)
+        self.update_right_panel(modified_arr)

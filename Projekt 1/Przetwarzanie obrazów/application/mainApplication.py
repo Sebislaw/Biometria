@@ -1,12 +1,10 @@
 import tkinter as tk
-from tkinter import ttk
-import ttkbootstrap as tb
-from ttkbootstrap.constants import *
-
 from PIL import Image, ImageTk
+
+from application.pages.readSavePicture import ReadSavePicture
 from application.pages.pixelOperations import PixelOperations
 from application.pages.graphicalFiltering import GraphicalFiltering
-from application.pages.readSavePicture import ReadSavePicture
+from application.pages.morphologicalOperations import MorphologicalOperations
 from application.pages.statistics import Statistics
 
 # Application
@@ -30,6 +28,9 @@ class MainApplication(tk.Tk):
         self.brightness_value = tk.IntVar(value=0)
         self.contrast_value = tk.IntVar(value=0)
         self.bin_thresh_value = tk.IntVar(value=128)
+        self.red_slider_value = tk.IntVar(value=0)
+        self.green_slider_value = tk.IntVar(value=0)
+        self.blue_slider_value = tk.IntVar(value=0)
 
         self.mean_size = tk.IntVar(value=3)
         self.mean_center = tk.IntVar(value=1)
@@ -39,6 +40,10 @@ class MainApplication(tk.Tk):
         self.custom_size = tk.IntVar(value=3)
         self.custom_kernel_size = tk.IntVar(value=3)
         self.custom_kernel = None
+
+        self.custom_struct_elem = None
+
+        self.bin_thresh_value_statistics = tk.IntVar(value=128)
         # ----------------------------------
 
         #---------------------------------------------------------------------------------------------------------------
@@ -76,6 +81,7 @@ class MainApplication(tk.Tk):
             "Wczytaj / Zapisz": ReadSavePicture(self.subpage_area, main_app=self),
             "Operacje na pikselach": PixelOperations(self.subpage_area, main_app=self),
             "Filtry Graficzne": GraphicalFiltering(self.subpage_area, main_app=self),
+            "Operacje morfologiczne": MorphologicalOperations(self.subpage_area, main_app=self),
             "Statystyki": Statistics(self.subpage_area, main_app=self)
         }
 
@@ -89,6 +95,7 @@ class MainApplication(tk.Tk):
 
         # Default page
         self.show_page("Wczytaj / Zapisz")
+        self.last_page = "Wczytaj / Zapisz"
 
         # Listening to the left panel change
         self.left_panel.bind("<Configure>", lambda e: self.schedule_image_update())
@@ -100,6 +107,7 @@ class MainApplication(tk.Tk):
             page.pack_forget()
         page_obj = self.pages[page_key]
         page_obj.pack(fill=tk.BOTH, expand=True)
+        self.last_page = page_key
         # If the page has a build_subpage method and a recorded last subpage, call it.
         if hasattr(page_obj, 'build_subpage'):
             last_subpage = getattr(page_obj, 'last_subpage_key', None)
@@ -163,10 +171,13 @@ class MainApplication(tk.Tk):
             self.clear_values()
 
     def clear_values(self):
-        self.grey_slider_value.set(0)
-        self.brightness_value.set(0)
-        self.contrast_value.set(0)
-        self.bin_thresh_value.set(128)
+        self.grey_slider_value = tk.IntVar(value=0)
+        self.brightness_value = tk.IntVar(value=0)
+        self.contrast_value = tk.IntVar(value=0)
+        self.bin_thresh_value = tk.IntVar(value=128)
+        self.red_slider_value = tk.IntVar(value=0)
+        self.green_slider_value = tk.IntVar(value=0)
+        self.blue_slider_value = tk.IntVar(value=0)
 
         self.mean_size = tk.IntVar(value=3)
         self.mean_center = tk.IntVar(value=1)
@@ -174,5 +185,13 @@ class MainApplication(tk.Tk):
         self.gaussian_sigma = tk.DoubleVar(value=1.0)
         self.sharpening_center = tk.IntVar(value=5)
         self.custom_size = tk.IntVar(value=3)
+        self.custom_kernel_size = tk.IntVar(value=3)
+        self.custom_kernel = None
 
+        self.custom_struct_elem = None
+
+        self.bin_thresh_value_statistics = tk.IntVar(value=128)
+
+        # Refresh the page
+        self.pages[self.last_page].show_subpage(self.pages[self.last_page].last_subpage_key)
     ####################################################################################################################

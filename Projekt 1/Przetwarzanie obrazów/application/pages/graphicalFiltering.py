@@ -1,6 +1,5 @@
 import tkinter as tk
 import numpy as np
-from PIL import Image
 from application.pages.baseSubpage import BaseSubpage
 
 # Page
@@ -17,6 +16,18 @@ class GraphicalFiltering(BaseSubpage):
             },
             "sharpening": {
                 "label": "Wyostrzający"
+            },
+            "roberts": {
+                "label": "Krzyż Robertsa"
+            },
+            "prewitt": {
+                "label": "Operatory Prewitta"
+            },
+            "sobel": {
+                "label": "Operatory Sobela"
+            },
+            "laplace": {
+                "label": "Operatory Laplace'a"
             },
             "custom": {
                 "label": "Dowolny filtr"
@@ -65,7 +76,7 @@ class GraphicalFiltering(BaseSubpage):
 
             n = self.main_app.gaussian_size.get()
             sigma = self.main_app.gaussian_sigma.get()
-            kernel = np.round(self.get_default_gaussian_kernel(n, sigma=sigma)).astype(np.int32)
+            kernel = np.round(self.get_default_gaussian_kernel(n, sigma=sigma), 2).astype(np.float32)
 
             self.show_matrix(kernel)
             right_frame = tk.Frame(self.content_area)
@@ -152,8 +163,6 @@ class GraphicalFiltering(BaseSubpage):
                       command=lambda: self.apply_filter(self.get_numeric_kernel(kernel_entries))
                       ).grid(row=2, column=0, columnspan=2, pady=5)
 
-
-
         else:
             tk.Label(self.content_area, text="Podstrona pusta").pack()
 
@@ -174,7 +183,7 @@ class GraphicalFiltering(BaseSubpage):
             matrix_frame.grid_rowconfigure(i, weight=1)
             for j in range(cols):
                 matrix_frame.grid_columnconfigure(j, weight=1)
-                tk.Label(matrix_frame, text=f"{int(kernel[i, j])}", borderwidth=1,
+                tk.Label(matrix_frame, text=f"{kernel[i, j]:.0f}" if kernel[i, j].is_integer() else f"{kernel[i, j]:.2f}", borderwidth=1,
                          relief="solid").grid(row=i, column=j, padx=2, pady=2, sticky="nsew")
 
     def update_kernel(self, type):
