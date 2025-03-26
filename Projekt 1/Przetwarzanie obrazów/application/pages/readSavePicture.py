@@ -38,12 +38,12 @@ class ReadSavePicture(BaseSubpage):
 
     def load_image(self):
         # Open a file dialog to select an image file
-        IMAGE_PATH = "pictures/300x300px.jpg"
-        # IMAGE_PATH = filedialog.askopenfilename(
-        #     title="Wybierz obraz",
-        #     initialdir=os.getcwd(),
-        #     filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp"), ("All files", "*.*")]
-        # )
+        # IMAGE_PATH = "pictures/300x300px.jpg"
+        IMAGE_PATH = filedialog.askopenfilename(
+            title="Wybierz obraz",
+            initialdir=os.getcwd(),
+            filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp"), ("All files", "*.*")]
+        )
         if not IMAGE_PATH:
             return  # User cancelled
 

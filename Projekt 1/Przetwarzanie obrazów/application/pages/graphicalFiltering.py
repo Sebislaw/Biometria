@@ -17,7 +17,7 @@ class GraphicalFiltering(BaseSubpage):
             "sharpening": {
                 "label": "Wyostrzający"
             },
-            "roberts": {
+            "robert": {
                 "label": "Krzyż Robertsa"
             },
             "prewitt": {
@@ -41,91 +41,17 @@ class GraphicalFiltering(BaseSubpage):
     ####################################################################################################################
 
     def build_subpage(self, page_key):
-        if page_key == "mean":
-            self.show_default_image()
-
-            n = self.main_app.mean_size.get()
-            center = self.main_app.mean_center.get()
-            kernel = self.get_default_mean_kernel(n, center)
-
-            self.show_matrix(kernel)
-            right_frame = tk.Frame(self.content_area)
-            right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
-
-            # Right half: Functional controls
-            controls_frame = tk.Frame(right_frame)
-            controls_frame.pack(expand=True)
-            tk.Label(controls_frame, text="Kernel Size:").grid(row=0, column=0, padx=5, pady=5)
-            size_var = self.main_app.mean_size
-            tk.Entry(controls_frame, textvariable=size_var, width=5).grid(row=0, column=1, padx=5, pady=5)
-
-            tk.Label(controls_frame, text="Central Value:").grid(row=1, column=0, padx=5, pady=5)
-            center_var = self.main_app.mean_center
-            tk.Entry(controls_frame, textvariable=center_var, width=5).grid(row=1, column=1, padx=5, pady=5)
-
-            # Two buttons: one to update kernel, one to apply it
-            tk.Button(controls_frame, text="Update Kernel",
-                      command=lambda: self.update_kernel("mean")
-                      ).grid(row=2, column=0, columnspan=2, pady=10)
-            tk.Button(controls_frame, text="Apply Filter",
-                      command=lambda: self.apply_filter(kernel.astype(np.float32) / kernel.sum())
-                      ).grid(row=4, column=0, columnspan=2, pady=10)
-
-        elif page_key == "gauss":
-            self.show_default_image()
-
-            n = self.main_app.gaussian_size.get()
-            sigma = self.main_app.gaussian_sigma.get()
-            kernel = np.round(self.get_default_gaussian_kernel(n, sigma=sigma), 2).astype(np.float32)
-
-            self.show_matrix(kernel)
-            right_frame = tk.Frame(self.content_area)
-            right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
-
-            # Right half: Functional controls
-            controls_frame = tk.Frame(right_frame)
-            controls_frame.pack(expand=True)
-            tk.Label(controls_frame, text="Kernel Size:").grid(row=0, column=0, padx=5, pady=5)
-            size_var = self.main_app.gaussian_size
-            tk.Entry(controls_frame, textvariable=size_var, width=5).grid(row=0, column=1, padx=5, pady=5)
-
-            tk.Label(controls_frame, text="Parametr sigma:").grid(row=1, column=0, padx=5, pady=5)
-            center_var = self.main_app.gaussian_sigma
-            tk.Entry(controls_frame, textvariable=center_var, width=5).grid(row=1, column=1, padx=5, pady=5)
-
-            # Two buttons: one to update kernel, one to apply it
-            tk.Button(controls_frame, text="Update Kernel",
-                      command=lambda: self.update_kernel("gauss")
-                      ).grid(row=2, column=0, columnspan=2, pady=10)
-            tk.Button(controls_frame, text="Apply Filter",
-                      command=lambda: self.apply_filter(kernel.astype(np.float32) / kernel.sum())
-                      ).grid(row=4, column=0, columnspan=2, pady=10)
-
-        elif page_key == "sharpening":
-            self.show_default_image()
-
-            center_value = self.main_app.sharpening_center.get()
-            kernel = self.get_default_sharpening_kernel(center_value)
-
-            self.show_matrix(kernel)
-            right_frame = tk.Frame(self.content_area)
-            right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
-
-            # Right half: Functional controls
-            controls_frame = tk.Frame(right_frame)
-            controls_frame.pack(expand=True)
-
-            tk.Label(controls_frame, text="Central Value:").grid(row=1, column=0, padx=5, pady=5)
-            center_var = self.main_app.sharpening_center
-            tk.Entry(controls_frame, textvariable=center_var, width=5,).grid(row=1, column=1, padx=5, pady=5)
-
-            # Two buttons: one to update kernel, one to apply it
-            tk.Button(controls_frame, text="Update Kernel",
-                      command=lambda: self.update_kernel("sharpening")
-                      ).grid(row=2, column=0, columnspan=2, pady=10)
-            tk.Button(controls_frame, text="Apply Filter",
-                      command=lambda: self.apply_filter(kernel.astype(np.float32) / (center_value - 4)) if center_value >= 5 else None
-                      ).grid(row=4, column=0, columnspan=2, pady=10)
+        self.show_default_image()
+        if page_key in {"mean", "gauss", "sharpening"}:
+            self.show_matrix(self.get_filter_kernel(page_key))
+            controls = {
+                "mean": [("Rozmiar filtra:", self.main_app.mean_size),
+                         ("Wartość centralna:", self.main_app.mean_center)],
+                "gauss": [("Rozmiar filtra:", self.main_app.gaussian_size),
+                          ("Parametr sigma:", self.main_app.gaussian_sigma)],
+                "sharpening": [("Wartość centralna:", self.main_app.sharpening_center)]
+            }
+            self.create_right_panel(controls[page_key], page_key)
 
         elif page_key == "custom":
             self.show_default_image()
@@ -153,18 +79,123 @@ class GraphicalFiltering(BaseSubpage):
             right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
             controls_frame = tk.Frame(right_frame)
             controls_frame.pack(expand=True)
-            tk.Label(controls_frame, text="Kernel Size:").grid(row=0, column=0, padx=5, pady=5)
+            tk.Label(controls_frame, text="Rozmiar filtra:").grid(row=0, column=0, padx=5, pady=5)
             tk.Entry(controls_frame, textvariable=self.main_app.custom_kernel_size, width=5).grid(row=0, column=1,
                                                                                                   padx=5, pady=5)
-            tk.Button(controls_frame, text="Update Matrix",
+            tk.Button(controls_frame, text="Zaktualizuj rozmiar",
                       command=lambda: self.update_kernel("custom")
                       ).grid(row=1, column=0, columnspan=2, pady=5)
-            tk.Button(controls_frame, text="Apply Filter",
+            tk.Button(controls_frame, text="Zastosuj filtr",
                       command=lambda: self.apply_filter(self.get_numeric_kernel(kernel_entries))
                       ).grid(row=2, column=0, columnspan=2, pady=5)
 
-        else:
-            tk.Label(self.content_area, text="Podstrona pusta").pack()
+        elif page_key == "robert":
+            left_frame = tk.Frame(self.content_area)
+            left_frame.place(relx=0.25, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+            right_frame = tk.Frame(self.content_area)
+            right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+            controls_frame = tk.Frame(right_frame)
+            controls_frame.pack(expand=True)
+
+            # Dropdown to pick variant
+            variant_var = tk.StringVar(value="Wariant 1")
+            variants = list(self.roberts_options.keys())
+            tk.OptionMenu(controls_frame, variant_var, *variants,
+                          command=lambda _: self.show_roberts_matrices(variant_var.get(), left_frame)
+                          ).grid(row=2, column=0, columnspan=2, pady=10)
+
+            # Button to apply
+            tk.Button(controls_frame, text="Zastosuj filtry",
+                      command=lambda: self.apply_roberts(variant_var.get())
+                      ).grid(row=4, column=0, columnspan=2, pady=10)
+
+            # Show default matrices
+            self.show_roberts_matrices(variant_var.get(), left_frame)
+
+        elif page_key == "prewitt":
+            self.create_filter_with_dropdown("Zastosuj filtr", self.prewitt_options)
+
+        elif page_key == "sobel":
+            self.create_filter_with_dropdown("Zastosuj filtr", self.sobel_options)
+
+        elif page_key == "laplace":
+            self.create_filter_with_dropdown("Zastosuj filtr", self.laplace_options)
+
+    def show_roberts_matrices(self, variant, parent_frame):
+        # Clear previous widgets
+        for widget in parent_frame.winfo_children():
+            widget.destroy()
+
+        kernels = self.roberts_options[variant]
+
+        # Left kernel matrix display
+        left_matrix_frame = tk.Frame(parent_frame, borderwidth=2, relief="ridge")
+        left_matrix_frame.place(relx=0.25, rely=0.5, relwidth=0.4, relheight=0.9, anchor="center")
+        self.display_matrix(left_matrix_frame, kernels[0])
+
+        # Right kernel matrix display
+        right_matrix_frame = tk.Frame(parent_frame, borderwidth=2, relief="ridge")
+        right_matrix_frame.place(relx=0.75, rely=0.5, relwidth=0.4, relheight=0.9, anchor="center")
+        self.display_matrix(right_matrix_frame, kernels[1])
+
+    def display_matrix(self, frame, kernel):
+        rows, cols = kernel.shape
+        for i in range(rows):
+            frame.grid_rowconfigure(i, weight=1)
+            for j in range(cols):
+                frame.grid_columnconfigure(j, weight=1)
+                tk.Label(frame, text=f"{kernel[i, j]:.0f}" if kernel[i, j].is_integer() else f"{kernel[i, j]:.2f}",
+                         borderwidth=1, relief="solid").grid(row=i, column=j, padx=2, pady=2, sticky="nsew")
+
+    def create_right_panel(self, controls, page_key):
+        right_frame = tk.Frame(self.content_area)
+        right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+
+        controls_frame = tk.Frame(right_frame)
+        controls_frame.pack(expand=True)
+
+        for row, (label, var) in enumerate(controls):
+            tk.Label(controls_frame, text=label).grid(row=row, column=0, padx=5, pady=5)
+            tk.Entry(controls_frame, textvariable=var, width=5).grid(row=row, column=1, padx=5, pady=5)
+
+        tk.Button(controls_frame, text="Zaktualizuj rozmiar", command=lambda: self.update_kernel(page_key)).grid(
+            row=len(controls), column=0, columnspan=2, pady=10)
+        tk.Button(controls_frame, text="Zastosuj filtr",
+                  command=lambda: self.apply_filter(self.get_filter_kernel(page_key))).grid(row=len(controls) + 2,
+                                                                                            column=0, columnspan=2,
+                                                                                            pady=10)
+    def get_filter_kernel(self, page_key):
+        if page_key == "mean":
+            return self.get_default_mean_kernel(self.main_app.mean_size.get(), self.main_app.mean_center.get())
+        elif page_key == "gauss":
+            return np.round(
+                self.get_default_gaussian_kernel(self.main_app.gaussian_size.get(), self.main_app.gaussian_sigma.get()),
+                2).astype(np.float32)
+        elif page_key == "sharpening":
+            center_value = self.main_app.sharpening_center.get()
+            return self.get_default_sharpening_kernel(center_value).astype(np.float32) / (
+                        center_value - 4) if center_value >= 5 else None
+        elif page_key == "custom":
+            return self.get_numeric_kernel(self.main_app.custom_kernel)
+        return None
+
+    def create_filter_with_dropdown(self, button_text, options):
+        left_frame = tk.Frame(self.content_area)
+        left_frame.place(relx=0.25, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+        right_frame = tk.Frame(self.content_area)
+        right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+        controls_frame = tk.Frame(right_frame)
+        controls_frame.pack(expand=True)
+
+        option_var = tk.StringVar(value=list(options.keys())[0])
+        tk.OptionMenu(controls_frame, option_var, *options.keys(),
+                      command=lambda _: self.show_matrix(options[option_var.get()])).grid(row=2, column=0, columnspan=2,
+                                                                                          pady=10)
+        tk.Button(controls_frame, text=button_text, command=lambda: self.apply_filter(options[option_var.get()])).grid(row=4,
+                                                                                                           column=0,
+                                                                                                           columnspan=2,
+                                                                                              pady=10)
+        self.show_matrix(options[option_var.get()])
 
     ####################################################################################################################
 
@@ -241,6 +272,25 @@ class GraphicalFiltering(BaseSubpage):
 
     ####################################################################################################################
 
+    def apply_roberts(self, variant_key):
+        # Convolve with each 2×2 kernel, combine results (e.g., sqrt of sum of squares)
+        if self.main_app.original_image_array is None:
+            return
+
+        kernels = self.roberts_options[variant_key]
+
+        # Convert to float for convolution
+        img = self.main_app.original_image_array.astype(np.float32)
+        # Convolve with the two kernels
+        res1 = self.convolve_image(img, kernels[0])
+        res2 = self.convolve_image(img, kernels[1])
+        # Combine (magnitude)
+        combined = np.sqrt(res1 ** 2 + res2 ** 2)
+        combined = np.clip(combined, 0, 255).astype(np.uint8)
+        self.update_right_panel(combined)
+
+    ####################################################################################################################
+
     def apply_filter(self, kernel):
         if self.main_app.original_image_array is None:
             print("No image loaded!")
@@ -259,3 +309,125 @@ class GraphicalFiltering(BaseSubpage):
                 for c in range(C):
                     out[i, j, c] = np.sum(padded[i:i + kH, j:j + kW, c] * kernel)
         return np.clip(out, 0, 255).astype(np.uint8)
+
+    # Roberts Cross variants:
+    roberts_options = {
+        "Wariant 1": [
+            np.array([[1, -1],
+                      [0, 0]]),
+            np.array([[1, 0],
+                      [-1, 0]])
+        ],
+        "Wariant 2": [
+            np.array([[1, 0],
+                      [0, -1]]),
+            np.array([[0, 1],
+                      [-1, 0]])
+        ]
+    }
+
+    # Prewitt 8 rotations (3×3 each). Example subset:
+    prewitt_options = {
+        "0 stopni": np.array([[-1, -1, -1],
+                              [0, 0, 0],
+                              [1, 1, 1]]),
+
+        "45 stopni": np.array([[0, -1, -1],
+                               [1, 0, -1],
+                               [1, 1, 0]]),
+
+        "90 stopni": np.array([[1, 0, -1],
+                               [1, 0, -1],
+                               [1, 0, -1]]),
+
+        "135 stopni": np.array([[1, 1, 0],
+                                [1, 0, -1],
+                                [0, -1, -1]]),
+
+        "180 stopni": np.array([[1, 1, 1],
+                                [0, 0, 0],
+                                [-1, -1, -1]]),
+
+        "225 stopni": np.array([[0, 1, 1],
+                                [-1, 0, 1],
+                                [-1, -1, 0]]),
+
+        "270 stopni": np.array([[-1, 0, 1],
+                                [-1, 0, 1],
+                                [-1, 0, 1]]),
+
+        "315 stopni": np.array([[-1, -1, 0],
+                                [-1, 0, 1],
+                                [0, 1, 1]])
+    }
+
+    # Sobel 8 rotations (3×3 each). Example subset:
+    sobel_options = {
+        "0 stopni": np.array([[-1, -2, -1],
+                              [0, 0, 0],
+                              [1, 2, 1]]),
+
+        "45 stopni": np.array([[0, -1, -2],
+                               [1, 0, -1],
+                               [2, 1, 0]]),
+
+        "90 stopni": np.array([[1, 0, -1],
+                               [2, 0, -2],
+                               [1, 0, -1]]),
+
+        "135 stopni": np.array([[2, 1, 0],
+                                [1, 0, -1],
+                                [0, -1, -2]]),
+
+        "180 stopni": np.array([[1, 2, 1],
+                                [0, 0, 0],
+                                [-1, -2, -1]]),
+
+        "225 stopni": np.array([[0, 1, 2],
+                                [-1, 0, 1],
+                                [-2, -1, 0]]),
+
+        "270 stopni": np.array([[-1, 0, 1],
+                                [-2, 0, 2],
+                                [-1, 0, 1]]),
+
+        "315 stopni": np.array([[-2, -1, 0],
+                                [-1, 0, 1],
+                                [0, 1, 2]])
+    }
+
+    laplace_options = {
+        "Poziomy": np.array([[0, 0, 0],
+                              [-1, 2, -1],
+                              [0, 0, 0]]),
+
+        "Diagonalny": np.array([[-1, 0, 0],
+                               [0, 2, 0],
+                               [0, 0, -1]]),
+
+        "Pionwy": np.array([[0, -1, 0],
+                               [0, 2, 0],
+                               [0, -1, 0]]),
+
+        "Antydiagonaly": np.array([[0, 0, -1],
+                                [0, 2, 0],
+                                [-1, 0, 0]]),
+
+        "Standardowy laplacjan": np.array([[-1, -1, -1],
+                                [-1, 8, -1],
+                                [-1, -1, -1]]),
+
+        "Mocniejsze centrum": np.array([[1, -2, 1],
+                                [-2, 4, -2],
+                                [1, -2, 1]]),
+
+        "Uproszczony laplacjan": np.array([[0, 1, 0],
+                                [1, -4, 1],
+                                [0, 1, 0]]),
+
+        "Alternatywna wersja": np.array([[2, -1, 2],
+                                [-1, -4, -1],
+                                [2, -1, 2]])
+
+    }
+

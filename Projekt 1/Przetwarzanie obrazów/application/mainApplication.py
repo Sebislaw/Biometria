@@ -31,6 +31,13 @@ class MainApplication(tk.Tk):
         self.red_slider_value = tk.IntVar(value=0)
         self.green_slider_value = tk.IntVar(value=0)
         self.blue_slider_value = tk.IntVar(value=0)
+        self.mixing_alpha = tk.DoubleVar(value=0.5)
+        self.added_image = None
+        self.exp_val = tk.DoubleVar(value=0.5)
+        self.exp_channel_var = tk.StringVar(value="wszystkie")
+        self.log_var = tk.DoubleVar(value=2)
+        self.log_channel_var = tk.StringVar(value="wszystkie")
+        self.eq_channel_var = tk.StringVar(value="wszystkie")
 
         self.mean_size = tk.IntVar(value=3)
         self.mean_center = tk.IntVar(value=1)
@@ -178,6 +185,13 @@ class MainApplication(tk.Tk):
         self.red_slider_value = tk.IntVar(value=0)
         self.green_slider_value = tk.IntVar(value=0)
         self.blue_slider_value = tk.IntVar(value=0)
+        self.mixing_alpha = tk.DoubleVar(value=0.5)
+        self.added_image = None
+        self.exp_val = tk.DoubleVar(value=0.5)
+        self.exp_channel_var = tk.StringVar(value="wszystkie")
+        self.log_var = tk.DoubleVar(value=2)
+        self.log_channel_var = tk.StringVar(value="wszystkie")
+        self.eq_channel_var = tk.StringVar(value="wszystkie")
 
         self.mean_size = tk.IntVar(value=3)
         self.mean_center = tk.IntVar(value=1)
@@ -191,7 +205,6 @@ class MainApplication(tk.Tk):
         self.custom_struct_elem = None
 
         self.bin_thresh_value_statistics = tk.IntVar(value=128)
-
         # Refresh the page
         self.pages[self.last_page].show_subpage(self.pages[self.last_page].last_subpage_key)
     ####################################################################################################################

@@ -111,10 +111,6 @@ class Statistics(BaseSubpage):
 
             self.convert_greyscale()
 
-            self.convert_greyscale()
-        else:
-            tk.Label(self.content_area, text="Podstrona pusta").pack()
-
     def on_slider_change(self, update_func):
         if self.slider_update_id is not None:
             self.after_cancel(self.slider_update_id)

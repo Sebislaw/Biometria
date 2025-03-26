@@ -36,11 +36,10 @@ class MorphologicalOperations(BaseSubpage):
         uniq = np.unique(self.main_app.original_image_array)
         if not set(uniq).issubset({0, 255}):
             return
-
         # Left half: Structural element grid (default provided if not present)
         if not hasattr(self.main_app, "custom_struct_elem"):
             self.create_default_struct_elem()
-
+        self.show_default_image()
         # Right half: Controls for element size and operation
         right_frame = tk.Frame(self.content_area)
         right_frame.place(relx=0.75, rely=0.5, relwidth=0.45, relheight=1, anchor="center")
@@ -62,10 +61,10 @@ class MorphologicalOperations(BaseSubpage):
             btn_text = "Zastosuj erozję"
             cmd = self.apply_opening
         elif op_type == "open":
-            btn_text = "Operacja otwarcia (erozja, potem dylacja)"
+            btn_text = "Operacja otwarcia"
             cmd = self.apply_opening
         elif op_type == "close":
-            btn_text = "Operacja zamknięcia (dylacja, potem erozja)"
+            btn_text = "Operacja zamknięcia)"
             cmd = self.apply_closing
         else:
             btn_text = ""
@@ -87,8 +86,6 @@ class MorphologicalOperations(BaseSubpage):
             self._build_morph_subpage(page_key)
         else:
             tk.Label(self.content_area, text="Podstrona pusta").pack()
-
-
 
     ####################################################################################################################
 
