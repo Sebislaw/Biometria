@@ -31,6 +31,7 @@ class MorphologicalOperations(BaseSubpage):
 
     def _build_morph_subpage(self, op_type):
         # Common binary image check
+        self.show_default_image()
         if self.main_app.original_image_array is None:
             return
         uniq = np.unique(self.main_app.original_image_array)
@@ -59,7 +60,7 @@ class MorphologicalOperations(BaseSubpage):
             cmd = self.apply_dilation
         elif op_type == "erosion":
             btn_text = "Zastosuj erozję"
-            cmd = self.apply_opening
+            cmd = self.apply_erosion
         elif op_type == "open":
             btn_text = "Operacja otwarcia"
             cmd = self.apply_opening
@@ -186,7 +187,42 @@ class MorphologicalOperations(BaseSubpage):
 
     ####################################################################################################################
 
-    def apply_erosion(self, image_array, se):
+    # def apply_erosion(self, image_array, se):
+    #     orig = image_array.astype(np.uint8)
+    #     n, m = se.shape
+    #     pad_r = n // 2
+    #     pad_c = m // 2
+    #     padded = np.pad(orig, ((pad_r, pad_r), (pad_c, pad_c), (0, 0)), mode='constant', constant_values=255)
+    #     out = np.copy(orig)
+    #     H, W, _ = orig.shape
+    #     for i in range(H):
+    #         for j in range(W):
+    #             neighborhood = padded[i:i + n, j:j + m, 0]
+    #             if np.all(neighborhood[se == 1] == 0):
+    #                 out[i, j] = [0, 0, 0]
+    #             else:
+    #                 out[i, j] = [255, 255, 255]
+    #     return out
+
+    def apply_erosion(self):
+        if self.main_app.original_image_array is None:
+            return
+        if not hasattr(self.main_app, "custom_struct_elem"):
+            return
+
+        n, m = self.main_app.custom_struct_elem.shape
+        se = np.zeros((n, m), dtype=np.uint8)
+        for i in range(n):
+            for j in range(m):
+                btn = self.main_app.custom_struct_elem[i, j]
+                se[i, j] = 1 if btn.cget("bg") == "black" else 0
+
+        eroded = self.apply_erosion_on_array(self.main_app.original_image_array, se)
+        self.main_app.modified_image = Image.fromarray(eroded)
+        self.main_app.modified_image_array = eroded
+        self.update_right_panel(eroded)
+
+    def apply_erosion_on_array(self, image_array, se):
         orig = image_array.astype(np.uint8)
         n, m = se.shape
         pad_r = n // 2
@@ -214,7 +250,7 @@ class MorphologicalOperations(BaseSubpage):
             for j in range(m):
                 btn = self.main_app.custom_struct_elem[i, j]
                 se[i, j] = 1 if btn.cget("bg") == "black" else 0
-        eroded = self.apply_erosion(self.main_app.original_image_array, se)
+        eroded = self.apply_erosion_on_array(self.main_app.original_image_array, se)
         opened = self.apply_dilation_on_array(eroded, se)
         self.main_app.modified_image = Image.fromarray(opened)
         self.main_app.modified_image_array = opened
@@ -232,7 +268,7 @@ class MorphologicalOperations(BaseSubpage):
                 btn = self.main_app.custom_struct_elem[i, j]
                 se[i, j] = 1 if btn.cget("bg") == "black" else 0
         dilated = self.apply_dilation_on_array(self.main_app.original_image_array, se)
-        closed = self.apply_erosion(dilated, se)
+        closed = self.apply_erosion_on_array(dilated, se)
         self.main_app.modified_image = Image.fromarray(closed)
         self.main_app.modified_image_array = closed
         self.update_right_panel(closed)

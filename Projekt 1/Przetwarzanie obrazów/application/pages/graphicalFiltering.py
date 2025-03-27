@@ -285,7 +285,7 @@ class GraphicalFiltering(BaseSubpage):
         res1 = self.convolve_image(img, kernels[0])
         res2 = self.convolve_image(img, kernels[1])
         # Combine (magnitude)
-        combined = np.sqrt(res1 ** 2 + res2 ** 2)
+        combined = np.abs(res1) + np.abs(res2)
         combined = np.clip(combined, 0, 255).astype(np.uint8)
         self.update_right_panel(combined)
 
@@ -299,6 +299,8 @@ class GraphicalFiltering(BaseSubpage):
         self.update_right_panel(filtered)
 
     def convolve_image(self, img_array, kernel):
+        if kernel.sum() > 1:
+            kernel = kernel / kernel.sum()
         H, W, C = img_array.shape
         kH, kW = kernel.shape
         pad_h, pad_w = kH // 2, kW // 2
