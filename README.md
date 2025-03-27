@@ -1,2 +1,2 @@
 # Biometria
-Repozytorium poświęcone przedmiotowi Biometria
+Repozytorium poświęcone przedmiotowi Biometria.
