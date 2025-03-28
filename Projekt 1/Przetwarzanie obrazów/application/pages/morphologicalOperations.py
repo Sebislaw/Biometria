@@ -115,21 +115,20 @@ class MorphologicalOperations(BaseSubpage):
 
     def update_struct_elem(self, size_str, col_str):
         try:
-            n = int(size_str)
-            m = int(col_str)
+            m = int(size_str)
+            n = int(col_str)
         except Exception:
             return
-        n = m = int(size_str)
         if hasattr(self, 'struct_elem_frame'):
             self.struct_elem_frame.destroy()
         left_frame = tk.Frame(self.content_area)
         left_frame.place(relx=0.25, rely=0.5, relwidth=0.45, relheight=1, anchor="center")
         self.struct_elem_frame = tk.Frame(left_frame)
         self.struct_elem_frame.pack(expand=True, fill="both")
-        new_elem = np.empty((n, n), dtype=object)
+        new_elem = np.empty((n, m), dtype=object)
         for i in range(n):
-            for j in range(n):
-                color = "black" if (i == n // 2 and j == n // 2) else "white"
+            for j in range(m):
+                color = "black" if (i == n // 2 and j == m // 2) else "white"
                 btn = tk.Button(self.struct_elem_frame, bg=color, relief="raised", borderwidth=1,
                                 command=lambda i=i, j=j: self.toggle_cell(i, j))
                 btn.grid(row=i, column=j, padx=2, pady=2, sticky="nsew")
@@ -186,23 +185,6 @@ class MorphologicalOperations(BaseSubpage):
         return out
 
     ####################################################################################################################
-
-    # def apply_erosion(self, image_array, se):
-    #     orig = image_array.astype(np.uint8)
-    #     n, m = se.shape
-    #     pad_r = n // 2
-    #     pad_c = m // 2
-    #     padded = np.pad(orig, ((pad_r, pad_r), (pad_c, pad_c), (0, 0)), mode='constant', constant_values=255)
-    #     out = np.copy(orig)
-    #     H, W, _ = orig.shape
-    #     for i in range(H):
-    #         for j in range(W):
-    #             neighborhood = padded[i:i + n, j:j + m, 0]
-    #             if np.all(neighborhood[se == 1] == 0):
-    #                 out[i, j] = [0, 0, 0]
-    #             else:
-    #                 out[i, j] = [255, 255, 255]
-    #     return out
 
     def apply_erosion(self):
         if self.main_app.original_image_array is None:
