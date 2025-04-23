@@ -172,3 +172,7 @@ cython_debug/
 
 # add
 .idea
+good_quality_images/
+teczowka_data/
+MMU-Iris-Database/
+informacje/
